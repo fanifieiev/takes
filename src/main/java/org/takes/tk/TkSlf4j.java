@@ -27,6 +27,7 @@ package org.takes.tk;
 import java.io.IOException;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.cactoos.list.ListOf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.takes.Request;
@@ -42,7 +43,7 @@ import org.takes.rq.RqMethod;
  *
  * @since 0.11.2
  */
-@ToString(of = { "origin", "target" })
+@ToString(of = {"origin", "target"})
 @EqualsAndHashCode
 public final class TkSlf4j implements Take {
 
@@ -93,10 +94,7 @@ public final class TkSlf4j implements Take {
             if (logger.isInfoEnabled()) {
                 logger.info(
                     "[{} {}] returned \"{}\" in {} ms",
-                    new RqMethod.Base(req).method(),
-                    new RqHref.Base(req).href(),
-                    rsp.head().iterator().next(),
-                    System.currentTimeMillis() - start
+                    this.parameters(req, rsp, start)
                 );
             }
             return rsp;
@@ -104,11 +102,7 @@ public final class TkSlf4j implements Take {
             if (logger.isInfoEnabled()) {
                 logger.info(
                     "[{} {}] thrown {}(\"{}\") in {} ms",
-                    new RqMethod.Base(req).method(),
-                    new RqHref.Base(req).href(),
-                    ex.getClass().getCanonicalName(),
-                    ex.getLocalizedMessage(),
-                    System.currentTimeMillis() - start
+                    this.parameters(req, ex, start)
                 );
             }
             throw ex;
@@ -117,14 +111,33 @@ public final class TkSlf4j implements Take {
             if (logger.isInfoEnabled()) {
                 logger.info(
                     "[{} {}] thrown runtime {}(\"{}\") in {} ms",
-                    new RqMethod.Base(req).method(),
-                    new RqHref.Base(req).href(),
-                    ex.getClass().getCanonicalName(),
-                    ex.getLocalizedMessage(),
-                    System.currentTimeMillis() - start
+                    this.parameters(req, ex, start)
                 );
             }
             throw ex;
         }
+    }
+
+    private Object[] parameters(
+        final Request req, final Response rsp, final long start)
+        throws IOException {
+        return new ListOf<>(
+            new RqMethod.Base(req).method(),
+            new RqHref.Base(req).href(),
+            rsp.head().iterator().next(),
+            System.currentTimeMillis() - start
+        ).toArray();
+    }
+
+    private Object[] parameters(
+        final Request req, final Exception exc, final long start)
+        throws IOException {
+        return new ListOf<>(
+            new RqMethod.Base(req).method(),
+            new RqHref.Base(req).href(),
+            exc.getClass().getCanonicalName(),
+            exc.getLocalizedMessage(),
+            System.currentTimeMillis() - start
+        ).toArray();
     }
 }
